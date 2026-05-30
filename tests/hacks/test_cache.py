@@ -3,15 +3,26 @@ from __future__ import annotations
 from unittest.mock import MagicMock
 
 import pytest
-from django.core.cache.backends.db import DatabaseCache
+from django.core.cache import CacheHandler
+from django.core.cache.backends.base import BaseCache
+from django.core.cache.backends.db import BaseDatabaseCache, DatabaseCache
 from django.core.cache.backends.dummy import DummyCache
 from django.core.cache.backends.filebased import FileBasedCache
 from django.core.cache.backends.locmem import LocMemCache
+from django.core.cache.backends.memcached import (
+    BaseMemcachedCache,
+    PyLibMCCache,
+    PyMemcacheCache,
+)
 from django.core.cache.backends.redis import RedisCache
 
 from django_observe.cache import observe_cache_operation
 from django_observe.config import get_config
-from django_observe.hacks.cache import WRAPPED_CACHE_METHODS, patch_cache
+from django_observe.hacks.cache import (
+    WRAPPED_CACHE_METHODS,
+    discover_cache_classes,
+    patch_cache,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -24,6 +35,22 @@ def enable_observing(settings):
 def mock_handler():
     """Create a mock signal handler."""
     return MagicMock()
+
+
+class TestDiscoverCacheClasses:
+    def test_returns_expected_classes(self):
+        assert set(discover_cache_classes()) == {
+            BaseCache,
+            BaseDatabaseCache,
+            BaseMemcachedCache,
+            DatabaseCache,
+            DummyCache,
+            FileBasedCache,
+            LocMemCache,
+            PyLibMCCache,
+            PyMemcacheCache,
+            RedisCache,
+        }
 
 
 class TestWrappedCacheMethods:
@@ -213,6 +240,49 @@ class TestPatchCacheFunctionality:
         assert "delete" in calls
 
         observe_cache_operation.disconnect(mock_handler)
+
+
+class TestPatchCacheAlias:
+    """Test that patch_cache patches BaseCache.__init__ and CacheHandler.create_connection."""
+
+    def test_base_cache_init_accepts_alias(self):
+        patch_cache()
+
+        cache = BaseCache({}, alias="my-alias")
+        assert cache.alias == "my-alias"
+
+    def test_base_cache_init_alias_defaults_to_none(self):
+        patch_cache()
+
+        cache = BaseCache({})
+        assert cache.alias is None
+
+    def test_cache_handler_sets_alias_on_connection(self, settings):
+        settings.CACHES = {
+            "default": {
+                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            }
+        }
+        patch_cache()
+
+        handler = CacheHandler()
+        cache = handler["default"]
+        assert cache.alias == "default"
+
+    def test_cache_handler_sets_alias_for_named_cache(self, settings):
+        settings.CACHES = {
+            "default": {
+                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            },
+            "secondary": {
+                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            },
+        }
+        patch_cache()
+
+        handler = CacheHandler()
+        assert handler["default"].alias == "default"
+        assert handler["secondary"].alias == "secondary"
 
 
 class TestPatchCacheWithDisabledObserving:
