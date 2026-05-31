@@ -6,7 +6,6 @@ import pytest
 from django.dispatch import Signal
 
 from django_salmon.cache import observe_cache
-from django_salmon.config import get_config
 from django_salmon.signals import observe_cache_operation
 
 
@@ -39,7 +38,6 @@ class TestObserveCacheDecorator:
     def test_observe_cache_decorates_function(self, settings, mock_handler):
         """Test that observe_cache decorator works on a function."""
         settings.OBSERVING = {"enabled": True}
-        get_config.cache_clear()
 
         @observe_cache
         def cache_get(key):
@@ -53,7 +51,6 @@ class TestObserveCacheDecorator:
     def test_observe_cache_decorates_method(self, settings, mock_handler):
         """Test that observe_cache decorator works on a method."""
         settings.OBSERVING = {"enabled": True}
-        get_config.cache_clear()
 
         class Cache:
             @observe_cache
@@ -78,7 +75,6 @@ class TestObserveCacheDecorator:
                 "django_salmon.decorators.with_result",
             ],
         }
-        get_config.cache_clear()
 
         @observe_cache
         def cache_get(key):
@@ -99,7 +95,6 @@ class TestObserveCacheDecorator:
     def test_observe_cache_uses_observe_signal(self, settings, mock_handler):
         """Test that observe_cache uses the observe decorator."""
         settings.OBSERVING = {"enabled": True}
-        get_config.cache_clear()
 
         @observe_cache
         def cache_get(key):
@@ -118,7 +113,6 @@ class TestObserveCacheDecorator:
     def test_observe_cache_respects_enabled_setting(self, settings, mock_handler):
         """Test that observe_cache respects the enabled setting."""
         settings.OBSERVING = {"enabled": False}
-        get_config.cache_clear()
 
         @observe_cache
         def cache_get(key):
@@ -135,7 +129,6 @@ class TestObserveCacheDecorator:
             "enabled": True,
             "cache": ["django_salmon.decorators.with_args"],
         }
-        get_config.cache_clear()
 
         @observe_cache
         def cache_set(key, value, timeout=None):
@@ -155,7 +148,6 @@ class TestObserveCacheDecorator:
             "enabled": True,
             "cache": ["django_salmon.decorators.with_timing"],
         }
-        get_config.cache_clear()
 
         @observe_cache
         def cache_get(key):
@@ -173,7 +165,6 @@ class TestObserveCacheDecorator:
     def test_observe_cache_default_config(self, settings, mock_handler):
         """Test observe_cache with default configuration."""
         settings.OBSERVING = {"enabled": True}
-        get_config.cache_clear()
 
         class Cache:
             @observe_cache
@@ -214,7 +205,6 @@ class TestObserveCacheIntegration:
                 "django_salmon.decorators.with_result",
             ],
         }
-        get_config.cache_clear()
 
         class MockCache:
             @observe_cache
@@ -241,7 +231,6 @@ class TestObserveCacheIntegration:
             "enabled": True,
             "cache": ["django_salmon.decorators.with_args"],
         }
-        get_config.cache_clear()
 
         class MockCache:
             @observe_cache

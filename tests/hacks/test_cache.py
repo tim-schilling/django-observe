@@ -17,7 +17,6 @@ from django.core.cache.backends.memcached import (
 from django.core.cache.backends.redis import RedisCache
 
 from django_salmon.cache import observe_cache_operation
-from django_salmon.config import get_config
 from django_salmon.hacks.cache import (
     WRAPPED_CACHE_METHODS,
     discover_cache_classes,
@@ -210,8 +209,6 @@ class TestPatchCacheFunctionality:
 
     def test_patched_cache_triggers_signal(self, mock_handler):
         """Test that patched cache methods trigger signals."""
-        get_config.cache_clear()
-
         patch_cache()
         observe_cache_operation.connect(mock_handler)
 
@@ -228,8 +225,6 @@ class TestPatchCacheFunctionality:
 
     def test_patched_cache_multiple_operations(self, mock_handler):
         """Test that multiple cache operations trigger multiple signals."""
-        get_config.cache_clear()
-
         patch_cache()
         observe_cache_operation.connect(mock_handler)
 
@@ -298,7 +293,6 @@ class TestPatchCacheWithDisabledObserving:
     def test_patched_cache_works_when_disabled(self, settings):
         """Test that patched cache still works when observing is disabled."""
         settings.OBSERVING = {"enabled": False}
-        get_config.cache_clear()
 
         patch_cache()
 
@@ -311,7 +305,6 @@ class TestPatchCacheWithDisabledObserving:
     def test_patched_cache_no_signal_when_disabled(self, settings, mock_handler):
         """Test that patched cache doesn't send signals when disabled."""
         settings.OBSERVING = {"enabled": False}
-        get_config.cache_clear()
 
         patch_cache()
         observe_cache_operation.connect(mock_handler)

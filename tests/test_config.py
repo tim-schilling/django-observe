@@ -11,12 +11,6 @@ class TestGetConfig:
     def test_get_config_returns_defaults_when_no_user_config(self, settings):
         """Test that get_config returns defaults when no user config is set."""
         settings.OBSERVING = {}
-        if hasattr(settings, "OBSERVING"):
-            delattr(settings, "OBSERVING")
-
-        # Clear the cache
-        get_config.cache_clear()
-
         config = get_config()
 
         assert config["enabled"] is True
@@ -29,9 +23,6 @@ class TestGetConfig:
             "enabled": False,
             "custom_key": "custom_value",
         }
-
-        # Clear the cache
-        get_config.cache_clear()
 
         config = get_config()
 
@@ -47,9 +38,6 @@ class TestGetConfig:
         settings.OBSERVING = {
             "cache": ["custom.decorator.path"],
         }
-
-        # Clear the cache
-        get_config.cache_clear()
 
         config = get_config()
 
@@ -75,9 +63,6 @@ class TestGetConfig:
         """Test get_config with empty user config."""
         settings.OBSERVING = {}
 
-        # Clear the cache
-        get_config.cache_clear()
-
         config = get_config()
 
         # Should have all defaults
@@ -89,9 +74,6 @@ class TestGetConfig:
         settings.OBSERVING = {
             "enabled": False,
         }
-
-        # Clear the cache
-        get_config.cache_clear()
 
         config = get_config()
 
@@ -117,9 +99,6 @@ class TestGetConfig:
             },
         }
 
-        # Clear the cache
-        get_config.cache_clear()
-
         config = get_config()
 
         assert config["enabled"] is True
@@ -134,7 +113,6 @@ class TestConfigurationIntegration:
     def test_config_used_by_decorators(self, settings):
         """Test that decorators use config to determine if observing is enabled."""
         settings.OBSERVING = {"enabled": True}
-        get_config.cache_clear()
 
         assert should_observe() is True
 
@@ -151,7 +129,6 @@ class TestConfigurationIntegration:
                 "django_salmon.decorators.with_result",
             ],
         }
-        get_config.cache_clear()
 
         registry = ObserveRegistry()
         decorators = registry.get_decorators("test_component")

@@ -5,7 +5,6 @@ from typing import Any
 
 import pytest
 
-from django_salmon.config import get_config
 from django_salmon.decorators import with_args, with_result, with_timing
 from django_salmon.registry import ObserveRegistry, registry
 
@@ -44,14 +43,6 @@ def another_mock_decorator() -> Callable[
         return func
 
     return decorator
-
-
-@pytest.fixture(autouse=True)
-def clear_config_cache():
-    """Clear config cache before each test."""
-    get_config.cache_clear()
-    yield
-    get_config.cache_clear()
 
 
 class TestObserveRegistry:
@@ -120,7 +111,7 @@ class TestObserveRegistry:
             "enabled": True,
             "cache": ["django_salmon.decorators.with_args"],
         }
-        get_config.cache_clear()
+
         test_registry.register("cache", mock_decorator)
 
         decorators = test_registry.get_decorators("cache")
@@ -134,7 +125,6 @@ class TestObserveRegistry:
             "enabled": True,
             "test_component": "not a list",
         }
-        get_config.cache_clear()
 
         decorators = test_registry.get_decorators("test_component")
         assert decorators == []

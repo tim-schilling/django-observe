@@ -5,7 +5,6 @@ from unittest.mock import MagicMock
 import pytest
 from django.dispatch import Signal
 
-from django_salmon.config import get_config
 from django_salmon.decorators import (
     observe,
     observe_context,
@@ -39,7 +38,6 @@ def mock_handler(test_signal):
 def enable_observing(settings):
     """Enable observing for all tests."""
     settings.OBSERVING = {"enabled": True}
-    get_config.cache_clear()
 
 
 @pytest.fixture(autouse=True)
@@ -63,7 +61,7 @@ class TestShouldObserve:
     def test_returns_false_when_disabled(self, settings):
         """Test should_observe returns False when disabled."""
         settings.OBSERVING = {"enabled": False}
-        get_config.cache_clear()
+
         assert should_observe() is False
 
     def test_returns_false_when_observing_locked(self, settings):
@@ -115,7 +113,6 @@ class TestObserveDecorator:
     ):
         """Test that observe decorator respects the enabled setting."""
         settings.OBSERVING = {"enabled": False}
-        get_config.cache_clear()
 
         @observe(test_signal)
         def test_function():

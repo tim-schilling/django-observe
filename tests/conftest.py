@@ -9,4 +9,3 @@ from django_salmon.config import get_config
 def clear_get_config_cache():
     get_config.cache_clear()
     yield
-    get_config.cache_clear()
