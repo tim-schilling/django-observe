@@ -134,6 +134,8 @@ class TestObserveDecorator:
             pass
 
         assert my_function.__name__ == "my_function"
+        # Ensure the decorated function is still callable.
+        my_function()
 
     def test_observe_stores_signal_attribute(self, test_signal):
         """Test that observe decorator stores signal on wrapper."""
@@ -143,6 +145,8 @@ class TestObserveDecorator:
             pass
 
         assert test_function.signal == test_signal  # type: ignore[attr-defined]
+        # Ensure the decorated function is still callable.
+        test_function()
 
 
 class TestWithArgsDecorator:
@@ -189,6 +193,8 @@ class TestWithArgsDecorator:
             pass
 
         assert my_function.__name__ == "my_function"
+        # Ensure the decorated function is still callable.
+        my_function()
 
     def test_with_args_classmethod(self, test_signal, mock_handler):
         """Test with_args with classmethod."""
@@ -265,6 +271,8 @@ class TestWithResultDecorator:
             pass
 
         assert my_function.__name__ == "my_function"
+        # Ensure the decorated function is still callable.
+        my_function()
 
 
 class TestWithStacktraceDecorator:
@@ -299,6 +307,8 @@ class TestWithStacktraceDecorator:
             pass
 
         assert my_function.__name__ == "my_function"
+        # Ensure the decorated function is still callable.
+        my_function()
 
 
 class TestWithTimingDecorator:
@@ -329,6 +339,8 @@ class TestWithTimingDecorator:
             pass
 
         assert my_function.__name__ == "my_function"
+        # Ensure the decorated function is still callable.
+        my_function()
 
 
 class TestWithResourcesDecorator:
@@ -365,6 +377,8 @@ class TestWithResourcesDecorator:
             pass
 
         assert my_function.__name__ == "my_function"
+        # Ensure the decorated function is still callable.
+        my_function()
 
 
 class TestPreventNestedObserve:
@@ -420,6 +434,8 @@ class TestPreventNestedObserve:
             pass
 
         assert my_function.__name__ == "my_function"
+        # Ensure the decorated function is still callable.
+        my_function()
 
 
 class TestDecoratorCombinations:

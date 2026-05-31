@@ -198,6 +198,8 @@ class TestObserveCacheDecorator:
             pass
 
         assert my_cache_function.__name__ == "my_cache_function"
+        # Ensure the decorated function is still callable.
+        my_cache_function()
 
 
 class TestObserveCacheIntegration:

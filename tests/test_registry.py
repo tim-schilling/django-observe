@@ -150,6 +150,7 @@ class TestObserveRegistry:
 
         assert hasattr(decorated, "_decorated")
         assert decorated._decorated is True
+        assert decorated() == "result"
 
     def test_apply_decorators_multiple(
         self, test_registry, mock_decorator, another_mock_decorator
@@ -168,6 +169,7 @@ class TestObserveRegistry:
         assert decorated._wrapped_index == 1
         assert hasattr(decorated, "_another_decorated")
         assert decorated._another_wrapped_index == 0
+        assert decorated() == "result"
 
     def test_apply_decorators_order(self, test_registry):
         """Test that decorators are applied in the correct order."""
@@ -187,7 +189,9 @@ class TestObserveRegistry:
         def test_func():
             pass
 
-        test_registry.apply_decorators("test", test_func)
+        result_func = test_registry.apply_decorators("test", test_func)
+        # Ensure the decorated function is still callable.
+        result_func()
 
         # Decorators should be applied in order: first, then second
         assert order == ["first", "second"]
@@ -202,6 +206,7 @@ class TestObserveRegistry:
 
         # Should return the original function unchanged
         assert decorated is test_func
+        assert decorated() == "result"
 
 
 class TestGlobalRegistry:
@@ -223,6 +228,7 @@ class TestGlobalRegistry:
         # Should be retrievable
         decorators = registry.get_decorators("test_component")
         assert test_decorator in decorators
+        assert test_decorator(test_decorator) is test_decorator
 
         # Clean up
         registry._decorators.pop("test_component", None)
@@ -238,6 +244,7 @@ class TestGlobalRegistry:
         # Should be retrievable later
         decorators = registry.get_decorators("persistent_test")
         assert test_decorator in decorators
+        assert test_decorator(test_decorator) is test_decorator
 
         # Clean up
         registry._decorators.pop("persistent_test", None)

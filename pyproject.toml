@@ -136,6 +136,9 @@ source = [
 
 [tool.coverage.report]
 show_missing = true
+omit = [
+  "tests/urls.py",
+]
 
 [tool.mypy]
 enable_error_code = [

@@ -10,7 +10,7 @@ class TestGetConfig:
 
     def test_get_config_returns_defaults_when_no_user_config(self, settings):
         """Test that get_config returns defaults when no user config is set."""
-        # Clear any existing OBSERVING setting
+        settings.OBSERVING = {}
         if hasattr(settings, "OBSERVING"):
             delattr(settings, "OBSERVING")
 

@@ -156,18 +156,15 @@ class TestPatchCache:
         patch_cache()
 
         for method in WRAPPED_CACHE_METHODS:
-            current_method = getattr(LocMemCache, method, None)
-            if current_method is not None:
-                assert current_method is not original_methods[method]
+            current_method = getattr(LocMemCache, method)
+            assert current_method is not original_methods[method]
 
     def test_patch_cache_wrapped_methods_are_callable(self):
         """Test that wrapped methods are still callable."""
         patch_cache()
 
         for method_name in WRAPPED_CACHE_METHODS:
-            method = getattr(LocMemCache, method_name, None)
-            if method is not None:
-                assert callable(method)
+            assert callable(getattr(LocMemCache, method_name))
 
 
 class TestPatchCacheFunctionality:
