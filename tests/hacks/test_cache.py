@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
-from django.core.cache import CacheHandler
+from django.core.cache import CacheHandler, InvalidCacheBackendError
 from django.core.cache.backends.base import BaseCache
 from django.core.cache.backends.db import BaseDatabaseCache, DatabaseCache
 from django.core.cache.backends.dummy import DummyCache
@@ -51,6 +51,16 @@ class TestDiscoverCacheClasses:
             PyMemcacheCache,
             RedisCache,
         }
+
+    def test_skips_modules_that_cannot_be_imported(self):
+        with (
+            patch(
+                "pkgutil.iter_modules", return_value=iter([("", "bad_module", False)])
+            ),
+            patch("importlib.import_module", side_effect=ImportError("no module")),
+        ):
+            classes = discover_cache_classes()
+        assert classes == []
 
 
 class TestWrappedCacheMethods:
@@ -315,3 +325,17 @@ class TestPatchCacheWithDisabledObserving:
         mock_handler.assert_not_called()
 
         observe_cache_operation.disconnect(mock_handler)
+
+
+class TestPatchedCreateConnectionErrors:
+    def test_raises_on_invalid_backend(self, settings):
+        settings.CACHES = {
+            "default": {
+                "BACKEND": "nonexistent.module.CacheClass",
+            }
+        }
+        patch_cache()
+
+        handler = CacheHandler()
+        with pytest.raises(InvalidCacheBackendError):
+            _ = handler["default"]

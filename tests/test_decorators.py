@@ -490,6 +490,16 @@ class TestEdgeCases:
         result = test_function("val1")
         assert result == "result"
 
+    def test_with_resources_without_observe_context(self):
+        observe_context.set(None)
+
+        @with_resources
+        def test_function():
+            return "result"
+
+        result = test_function()
+        assert result == "result"
+
     def test_observe_with_class_method(self, test_signal, mock_handler):
         """Test observe with a class method."""
 
