@@ -16,7 +16,7 @@ from django.core.cache.backends.memcached import (
 )
 from django.core.cache.backends.redis import RedisCache
 
-from django_salmon.cache import observe_cache_operation
+from django_salmon.cache import observe_cache, observe_cache_operation
 from django_salmon.hacks.cache import (
     WRAPPED_CACHE_METHODS,
     discover_cache_classes,
@@ -101,7 +101,7 @@ class TestPatchCache:
         original_get = LocMemCache.get
         original_set = LocMemCache.set
 
-        patch_cache()
+        patch_cache(observe_cache)
 
         assert LocMemCache.get is not original_get
         assert LocMemCache.set is not original_set
@@ -113,7 +113,7 @@ class TestPatchCache:
         """Test that patch_cache wraps DummyCache methods."""
         original_get = DummyCache.get
 
-        patch_cache()
+        patch_cache(observe_cache)
 
         assert DummyCache.get is not original_get
         assert callable(DummyCache.get)
@@ -122,7 +122,7 @@ class TestPatchCache:
         """Test that patch_cache wraps DatabaseCache methods."""
         original_get = DatabaseCache.get
 
-        patch_cache()
+        patch_cache(observe_cache)
 
         assert DatabaseCache.get is not original_get
         assert callable(DatabaseCache.get)
@@ -131,7 +131,7 @@ class TestPatchCache:
         """Test that patch_cache wraps FileBasedCache methods."""
         original_get = FileBasedCache.get
 
-        patch_cache()
+        patch_cache(observe_cache)
 
         assert FileBasedCache.get is not original_get
         assert callable(FileBasedCache.get)
@@ -140,7 +140,7 @@ class TestPatchCache:
         """Test that patch_cache wraps RedisCache methods."""
         original_get = RedisCache.get
 
-        patch_cache()
+        patch_cache(observe_cache)
 
         assert RedisCache.get is not original_get
         assert callable(RedisCache.get)
@@ -152,7 +152,7 @@ class TestPatchCache:
             for method in WRAPPED_CACHE_METHODS
         }
 
-        patch_cache()
+        patch_cache(observe_cache)
 
         for method in WRAPPED_CACHE_METHODS:
             current_method = getattr(LocMemCache, method)
@@ -160,7 +160,7 @@ class TestPatchCache:
 
     def test_patch_cache_wrapped_methods_are_callable(self):
         """Test that wrapped methods are still callable."""
-        patch_cache()
+        patch_cache(observe_cache)
 
         for method_name in WRAPPED_CACHE_METHODS:
             assert callable(getattr(LocMemCache, method_name))
@@ -171,7 +171,7 @@ class TestPatchCacheFunctionality:
 
     def test_patched_locmem_cache_get(self):
         """Test that patched LocMemCache.get still works."""
-        patch_cache()
+        patch_cache(observe_cache)
 
         cache = LocMemCache("test", {"LOCATION": "test"})
         cache.set("key", "value")
@@ -181,7 +181,7 @@ class TestPatchCacheFunctionality:
 
     def test_patched_locmem_cache_set(self):
         """Test that patched LocMemCache.set still works."""
-        patch_cache()
+        patch_cache(observe_cache)
 
         cache = LocMemCache("test", {"LOCATION": "test"})
 
@@ -190,7 +190,7 @@ class TestPatchCacheFunctionality:
 
     def test_patched_locmem_cache_delete(self):
         """Test that patched LocMemCache.delete still works."""
-        patch_cache()
+        patch_cache(observe_cache)
 
         cache = LocMemCache("test", {"LOCATION": "test"})
         cache.set("key", "value")
@@ -200,7 +200,7 @@ class TestPatchCacheFunctionality:
 
     def test_patched_dummy_cache_get(self):
         """Test that patched DummyCache.get still works."""
-        patch_cache()
+        patch_cache(observe_cache)
 
         cache = DummyCache("test", {})
 
@@ -209,7 +209,7 @@ class TestPatchCacheFunctionality:
 
     def test_patched_cache_triggers_signal(self, mock_handler):
         """Test that patched cache methods trigger signals."""
-        patch_cache()
+        patch_cache(observe_cache)
         observe_cache_operation.connect(mock_handler)
 
         cache = LocMemCache("test", {"LOCATION": "test"})
@@ -225,7 +225,7 @@ class TestPatchCacheFunctionality:
 
     def test_patched_cache_multiple_operations(self, mock_handler):
         """Test that multiple cache operations trigger multiple signals."""
-        patch_cache()
+        patch_cache(observe_cache)
         observe_cache_operation.connect(mock_handler)
 
         cache = LocMemCache("test", {"LOCATION": "test"})
@@ -248,13 +248,13 @@ class TestPatchCacheAlias:
     """Test that patch_cache patches BaseCache.__init__ and CacheHandler.create_connection."""
 
     def test_base_cache_init_accepts_alias(self):
-        patch_cache()
+        patch_cache(observe_cache)
 
         cache = BaseCache({}, alias="my-alias")
         assert cache.alias == "my-alias"
 
     def test_base_cache_init_alias_defaults_to_none(self):
-        patch_cache()
+        patch_cache(observe_cache)
 
         cache = BaseCache({})
         assert cache.alias is None
@@ -265,7 +265,7 @@ class TestPatchCacheAlias:
                 "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
             }
         }
-        patch_cache()
+        patch_cache(observe_cache)
 
         handler = CacheHandler()
         cache = handler["default"]
@@ -280,7 +280,7 @@ class TestPatchCacheAlias:
                 "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
             },
         }
-        patch_cache()
+        patch_cache(observe_cache)
 
         handler = CacheHandler()
         assert handler["default"].alias == "default"
@@ -294,7 +294,7 @@ class TestPatchCacheWithDisabledObserving:
         """Test that patched cache still works when observing is disabled."""
         settings.OBSERVING = {"enabled": False}
 
-        patch_cache()
+        patch_cache(observe_cache)
 
         cache = LocMemCache("test", {"LOCATION": "test"})
 
@@ -306,7 +306,7 @@ class TestPatchCacheWithDisabledObserving:
         """Test that patched cache doesn't send signals when disabled."""
         settings.OBSERVING = {"enabled": False}
 
-        patch_cache()
+        patch_cache(observe_cache)
         observe_cache_operation.connect(mock_handler)
 
         cache = LocMemCache("test", {"LOCATION": "test"})
@@ -324,7 +324,7 @@ class TestPatchedCreateConnectionErrors:
                 "BACKEND": "nonexistent.module.CacheClass",
             }
         }
-        patch_cache()
+        patch_cache(observe_cache)
 
         handler = CacheHandler()
         with pytest.raises(InvalidCacheBackendError):

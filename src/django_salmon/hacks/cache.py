@@ -3,14 +3,13 @@ from __future__ import annotations
 import importlib
 import inspect
 import pkgutil
+from collections.abc import Callable
 from typing import Any
 
 import django.core.cache.backends
 from django.core.cache import CacheHandler, InvalidCacheBackendError
 from django.core.cache.backends.base import BaseCache
 from django.utils.module_loading import import_string
-
-from django_salmon.cache import observe_cache
 
 WRAPPED_CACHE_METHODS = [
     "add",
@@ -62,12 +61,23 @@ def patch_init(cache_class: type[BaseCache]) -> None:
     cache_class.__init__ = patched_cache_init
 
 
-def patch_cache() -> None:
+def patch_cache(
+    observe_decorator: Callable[[Callable[..., Any]], Callable[..., Any]],
+) -> None:
+    """
+    Patch Django's cache for improved observability.
+
+    This wires up the passed in observe decorator on the wrapped cache methods,
+    and patches Django's cache to pass and store the CACHES setting alias
+    on the cache instance.
+    """
+
     for cache_class in WRAPPED_CACHE_CLASSES:
         patch_init(cache_class)
 
         for method in WRAPPED_CACHE_METHODS:
-            setattr(cache_class, method, observe_cache(getattr(cache_class, method)))
+            new_method = observe_decorator(getattr(cache_class, method))
+            setattr(cache_class, method, new_method)
 
     def patched_create_connection(self: CacheHandler, alias: str) -> BaseCache:
         params = self.settings[alias].copy()
